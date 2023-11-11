@@ -1,0 +1,243 @@
+Data Class
+@Entity
+data class User(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    @ColumnInfo(name = "nome") val nome: String?,
+    @ColumnInfo(name = "email") val email: String?
+)
+
+Dao
+@Dao
+interface UserDao {
+    @Query("SELECT * FROM user")
+    fun getAll(): List<User>
+
+    @Query("SELECT * FROM user WHERE uid IN (:userIds)")
+    fun loadAllByIds(userIds: IntArray): List<User>
+
+    @Query("SELECT * FROM user WHERE nome LIKE :first AND " +
+            "email LIKE :last LIMIT 1")
+    fun findByName(first: String, last: String): User
+
+    @Insert
+    fun insertAll(vararg users: User)
+
+    @Delete
+    fun delete(user: User)
+}
+
+Database
+Database(entities = [User::class], version = 1)
+abstract class AppDatabase : RoomDatabase() {
+    abstract fun userDao(): UserDao
+}
+
+MainActivity
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <EditText
+        android:id="@+id/editTextEmail"
+        android:layout_width="wrap_content"
+        android:layout_height="50dp"
+        android:layout_marginStart="48dp"
+        android:layout_marginTop="32dp"
+        android:ems="10"
+        android:inputType="text"
+        android:text="Email"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toEndOf="@+id/textView2"
+        app:layout_constraintTop_toBottomOf="@+id/editTextNome" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="60dp"
+        android:layout_marginTop="68dp"
+        android:text="Nome"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="60dp"
+        android:layout_marginTop="64dp"
+        android:text="E-mail"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView" />
+
+    <Button
+        android:id="@+id/cadastrar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="256dp"
+        android:text="Cadastrar"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <EditText
+        android:id="@+id/editTextNome"
+        android:layout_width="wrap_content"
+        android:layout_height="50dp"
+        android:layout_marginTop="56dp"
+        android:ems="10"
+        android:inputType="text"
+        android:text="Nome"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.466"
+        app:layout_constraintStart_toEndOf="@+id/textView"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_recycler"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="344dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:listitem="@layout/text_row_item" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+
+Item do Recycler View
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/card"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    android:layout_marginStart="10dp"
+    android:layout_marginTop="10dp"
+    app:cardCornerRadius="5dp"
+    app:cardElevation="5dp"
+    app:cardUseCompatPadding="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Name "
+            android:textAppearance="?attr/textAppearanceHeadline6" />
+
+        <TextView
+            android:id="@+id/email"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="4"
+            android:text="Email"
+            android:textAppearance="?attr/textAppearanceHeadline6" />
+
+        <ImageView
+            android:id="@+id/imagem"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            app:srcCompat="@android:drawable/ic_menu_delete" />
+
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>
+
+Adaptador do RecyclerView
+
+class UserAdapter(var datalist:MutableList<User>): RecyclerView.Adapter<UserAdapter.UserHolder>() {
+
+    class UserHolder(val binding: TextRowItemBinding) : RecyclerView.ViewHolder(binding.root) {
+        fun bind(get: User) {
+            binding.name.text = get.id.toString()
+            binding.email.text = get.nome + get.email
+
+        }
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): UserHolder {
+        val binding = TextRowItemBinding
+            .inflate(LayoutInflater.from(parent.context), parent, false)
+        return UserHolder(binding)
+    }
+
+
+
+    override fun onBindViewHolder(holder: UserHolder, position: Int) {
+        holder.binding.imagem.setOnClickListener{deleteItem(Integer.parseInt(holder.binding.name.text.toString()))}
+        holder.bind(datalist.get(position))
+
+    }
+
+    override fun getItemCount(): Int {
+        return datalist.size
+    }
+
+    fun deleteItem(index: Int){
+        datalist.removeAt(index)
+        notifyDataSetChanged()
+    }
+
+}
+
+Main Activity.kt
+class MainActivity : AppCompatActivity() {
+    private lateinit var binding: ActivityMainBinding
+    private lateinit var adapter: UserAdapter
+    private lateinit var users :List<User>
+
+
+    val db = Room.databaseBuilder(
+        applicationContext,
+        AppDatabase::class.java, "database-name"
+    ).build()
+
+    val userDao = db.userDao()
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        val view = binding.root
+        setContentView(view)
+
+        getUsers();
+
+        binding.rvRecycler.layoutManager = LinearLayoutManager(this)
+        adapter = UserAdapter(users.toMutableList())
+        binding.rvRecycler.adapter = adapter
+
+        binding.cadastrar.setOnClickListener {
+           saveUser();
+        }
+
+    }
+
+    private fun getUsers() {
+        users = userDao.getAll();
+
+        adapter.notifyDataSetChanged();
+    }
+
+    private fun saveUser() {
+        val user = User(0, binding.editTextNome.toString(), binding.editTextEmail.toString());
+
+        userDao.insertAll(user);
+
+        getUsers();
+    }
+}
